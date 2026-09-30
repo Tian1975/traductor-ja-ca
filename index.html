@@ -114,7 +114,10 @@ a{color:var(--accent)}
 .mstats .ms{color:var(--muted);flex:1;text-align:right}
 .photorow.big{margin-top:0}
 .photorow.big .btn{min-height:64px;font-size:17px;flex-direction:column;gap:2px}
+#result:not([hidden]){display:flex;flex-direction:column}
 .jablock{margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.jablock.after{margin:14px 0 0;padding:12px 0 0;border-bottom:0;border-top:1px solid var(--line)}
+.jatoggle{font:inherit;font-size:16px;font-weight:600;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-height:44px;width:100%;text-align:left;cursor:pointer;margin-bottom:10px}
 .jatext{font-size:24px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
 .jatext.big{font-size:30px}
 .reading{font-size:17px;color:var(--muted);white-space:pre-wrap;word-break:break-word;margin-top:6px;line-height:1.5}
@@ -238,23 +241,26 @@ a{color:var(--accent)}
   <div class="card" id="result" hidden>
     <div class="res-dir" id="resDir"></div>
     <div class="jablock" id="jaBlock">
+      <button class="jatoggle" id="jaToggle" aria-expanded="false">🇯🇵 Japonès i lectura <span id="jaArrow">▸</span></button>
+      <div id="jaInner">
       <div class="jatext" id="jaText" lang="ja"></div>
       <div class="reading" id="readH" lang="ja" hidden></div>
       <div class="reading" id="readK" lang="ja" hidden></div>
       <div class="reading romaji" id="readR" hidden></div>
       <div class="rtools">
-        <button class="chip" id="tH" aria-pressed="true">あ</button>
+        <button class="chip" id="tH" aria-pressed="false">あ</button>
         <button class="chip" id="tK" aria-pressed="false">ア</button>
-        <button class="chip" id="tR" aria-pressed="true">rōmaji</button>
+        <button class="chip" id="tR" aria-pressed="false">rōmaji</button>
       </div>
       <div class="stools">
         <button class="chip speak" id="speakN" aria-label="Escolta">🔊 Escolta</button>
         <button class="chip speak" id="speakS" aria-label="Escolta lent">🐢 Lent</button>
       </div>
+      </div>
     </div>
     <div class="trans" id="resTrans" lang="ca"></div>
     <ul class="notes" id="resNotes" hidden></ul>
-    <div class="row between" style="margin-top:12px">
+    <div class="row between" id="resFoot" style="margin-top:12px">
       <div class="row">
         <button class="btn small" id="copy">📄 Copia</button>
         <button class="btn small" id="star" aria-pressed="false">☆ Desa</button>
@@ -359,7 +365,7 @@ a{color:var(--accent)}
     <button class="btn wide danger" id="deleteKey">Esborra la clau d'aquest mòbil</button>
   </div>
 
-  <p class="foot">Traductor JA↔CA · v2.1</p>
+  <p class="foot">Traductor JA↔CA · v2.2</p>
 </div>
 
 </div>
@@ -368,7 +374,7 @@ a{color:var(--accent)}
 (function () {
   'use strict';
 
-  var VERSION = '2.1';
+  var VERSION = '2.2';
   var API = 'https://generativelanguage.googleapis.com/v1beta/';
   var CHAIN = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
   var LITE = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-2.5-flash-lite'];
@@ -377,7 +383,7 @@ a{color:var(--accent)}
   var TEST_TIMEOUT_MS = 15000;
   var HOUR = 3600000;
   /* quant de temps se salta un model que ha fallat, segons el motiu */
-  var COOLDOWN = { nofree: 24 * HOUR, notfound: 24 * HOUR, forbidden: 24 * HOUR, quota: HOUR, timeout: HOUR, overload: HOUR, badreq: HOUR, empty: HOUR, model: HOUR };
+  var COOLDOWN = { nofree: 24 * HOUR, notfound: 24 * HOUR, forbidden: 24 * HOUR, quota: HOUR, timeout: HOUR, overload: HOUR, badreq: HOUR, empty: HOUR, model: HOUR, badjson: 0 };
   var REASON_TEXT = {
     ok: 'funciona',
     nofree: 'no inclòs al nivell gratuït',
@@ -389,10 +395,12 @@ a{color:var(--accent)}
     badreq: 'petició no acceptada',
     empty: 'resposta buida',
     model: 'error',
+    badjson: 'resposta mal formada',
     network: 'sense connexió'
   };
   var MAX_SIDE = 1600;
   var MAX_CHARS = 4000;
+  var LONG_CHARS = 1500;
 
   function $(id) { return document.getElementById(id); }
   function show(el, on) { if (on) { el.removeAttribute('hidden'); } else { el.setAttribute('hidden', ''); } }
@@ -513,29 +521,79 @@ a{color:var(--accent)}
     return out;
   }
 
+  var RES_KEYS = ['direccio', 'original', 'traduccio', 'lectura', 'romaji', 'notes'];
+  function normResult(o, dir) {
+    var notes = [];
+    if (o.notes && o.notes.length) {
+      for (var i = 0; i < o.notes.length; i++) { if (o.notes[i]) { notes.push(String(o.notes[i])); } }
+    }
+    return {
+      dir: o.direccio === 'ja-ca' || o.direccio === 'ca-ja' ? o.direccio : dir,
+      original: o.original ? String(o.original) : '',
+      translation: o.traduccio ? String(o.traduccio) : '',
+      reading: o.lectura ? String(o.lectura) : '',
+      romaji: o.romaji ? String(o.romaji) : '',
+      notes: notes
+    };
+  }
+  function decodeLoose(raw) {
+    /* escapa les cometes que el model no ha escapat i descodifica */
+    var fixed = raw.replace(/\\"/g, '\u0002').replace(/"/g, '\u0002').replace(/\u0002/g, '\\"')
+      .replace(/\r/g, '').replace(/\n/g, '\\n').replace(/\t/g, '\\t');
+    try { return JSON.parse('"' + fixed + '"'); }
+    catch (e) { return raw.replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\'); }
+  }
+  /* lector tolerant per a JSON mal format (p. ex. cometes sense escapar) */
+  function lenientParse(t) {
+    var o = {};
+    var nextKeyRe = new RegExp('"\\s*,\\s*"(' + RES_KEYS.join('|') + ')"\\s*:', 'g');
+    for (var i = 0; i < RES_KEYS.length; i++) {
+      var k = RES_KEYS[i];
+      var m = new RegExp('"' + k + '"\\s*:\\s*').exec(t);
+      if (!m) { continue; }
+      var start = m.index + m[0].length;
+      if (k === 'notes') {
+        var endN = t.indexOf(']', start);
+        var arr = t.slice(start, endN === -1 ? t.length : endN);
+        var out = [], mm, re = /"((?:[^"\\]|\\.)*)"/g;
+        while ((mm = re.exec(arr)) !== null) { out.push(decodeLoose(mm[1])); }
+        o.notes = out;
+        continue;
+      }
+      if (t.charAt(start) !== '"') { continue; }
+      start += 1;
+      nextKeyRe.lastIndex = start;
+      var nk = nextKeyRe.exec(t);
+      var end;
+      if (nk) { end = nk.index; }
+      else {
+        var close = t.search(/"\s*\}\s*$/);
+        end = close > start ? close : t.lastIndexOf('"');
+      }
+      if (end <= start) { continue; }
+      o[k] = decodeLoose(t.slice(start, end));
+    }
+    return o.traduccio ? o : null;
+  }
+  /* retorna null si la resposta no es pot llegir */
   function parseResult(text, dir) {
     var t = (text || '').trim();
     t = t.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
     var a = t.indexOf('{'), b = t.lastIndexOf('}');
     if (a !== -1 && b > a) {
-      try {
-        var o = JSON.parse(t.slice(a, b + 1));
-        var notes = [];
-        if (o.notes && o.notes.length) {
-          for (var i = 0; i < o.notes.length; i++) { if (o.notes[i]) { notes.push(String(o.notes[i])); } }
-        }
-        return {
-          dir: o.direccio === 'ja-ca' || o.direccio === 'ca-ja' ? o.direccio : dir,
-          original: o.original ? String(o.original) : '',
-          translation: o.traduccio ? String(o.traduccio) : '',
-          reading: o.lectura ? String(o.lectura) : '',
-          romaji: o.romaji ? String(o.romaji) : '',
-          notes: notes
-        };
-      } catch (e) { /* cau al format lliure */ }
+      var body = t.slice(a, b + 1);
+      try { return normResult(JSON.parse(body), dir); } catch (e) { /* provem el lector tolerant */ }
+      var o = lenientParse(body);
+      if (o) { return normResult(o, dir); }
+      return null;
     }
-    return { dir: dir, original: '', translation: t, reading: '', romaji: '', notes: [] };
+    /* sense JSON: només l'acceptem si és text normal curt (mode simple) */
+    if (t && t.charAt(0) !== '{' && !/"(direccio|traduccio|original|lectura)"/.test(t) && t.length < 2000) {
+      return { dir: dir, original: '', translation: t, reading: '', romaji: '', notes: [] };
+    }
+    return null;
   }
+
 
   /* ---------- estat dels models ---------- */
   function getStats() { return jsonGet('mstat', {}); }
@@ -590,7 +648,9 @@ a{color:var(--accent)}
         if (fb || txt === null || !txt.trim()) {
           return { ok: false, reason: 'empty', detail: fb ? ('Bloquejat: ' + fb) : 'Resposta buida' };
         }
-        return { ok: true, result: parseResult(txt, dir) };
+        var parsed = parseResult(txt, dir);
+        if (!parsed) { return { ok: false, reason: 'badjson', detail: 'Resposta mal formada' }; }
+        return { ok: true, result: parsed };
       }
       if (isKeyError(r)) { return { ok: false, reason: 'key', fatal: true, detail: errMessage(r) }; }
       if (r.status === 400 && !simple) {
@@ -697,6 +757,8 @@ a{color:var(--accent)}
     } else {
       var d = '';
       if (r.fails) { d = failsText(r.fails).join(' · '); }
+      var allBad = r.fails && r.fails.length && r.fails.every(function (f) { return f.reason === 'badjson'; });
+      if (allBad) { showError('La resposta ha arribat malament.', ' Torna-ho a provar. Si el text és molt llarg, tradueix-lo per parts.'); return; }
       var extra = r.reason === 'quota-mixed' ? ' Alguns models han arribat al límit.' : '';
       showError('No s\'ha pogut traduir.', extra + ' Torna-ho a provar d\'aquí a una estona.', d);
     }
@@ -747,7 +809,7 @@ a{color:var(--accent)}
   }
 
   /* ---------- preferències de lectura ---------- */
-  var showPref = { H: lsGet('showH', '1') === '1', K: lsGet('showK', '0') === '1', R: lsGet('showR', '1') === '1' };
+  var showPref = { H: lsGet('rdH', '0') === '1', K: lsGet('rdK', '0') === '1', R: lsGet('rdR', '0') === '1' };
   function applyReadingPrefs() {
     show($('readH'), showPref.H && !!$('readH').textContent);
     show($('readK'), showPref.K && !!$('readK').textContent);
@@ -758,7 +820,7 @@ a{color:var(--accent)}
   }
   function togglePref(k) {
     showPref[k] = !showPref[k];
-    lsSet('show' + k, showPref[k] ? '1' : '0');
+    lsSet('rd' + k, showPref[k] ? '1' : '0');
     applyReadingPrefs();
   }
 
@@ -943,6 +1005,16 @@ a{color:var(--accent)}
     show($('tH'), !!$('readH').textContent); show($('tK'), !!reading); show($('tR'), !!$('readR').textContent);
     show($('speakN'), hasTTS); show($('speakS'), hasTTS);
     show($('jaBlock'), jaBlockOn);
+    /* JA→CA: primer la traducció i el japonès plegat a sota; CA→JA: el japonès és la traducció */
+    var jaFirst = x.dir === 'ca-ja';
+    $('resDir').style.order = 0;
+    $('jaBlock').style.order = jaFirst ? 1 : 2;
+    $('resTrans').style.order = jaFirst ? 2 : 1;
+    $('resNotes').style.order = 3;
+    $('resFoot').style.order = 4;
+    $('jaBlock').className = 'jablock' + (jaFirst ? '' : ' after');
+    show($('jaToggle'), !jaFirst);
+    setJaOpen(jaFirst ? true : lsGet('jaOpen', '0') === '1', true);
     if (x.dir === 'ca-ja' && jaBlockOn) {
       show($('resTrans'), false);
     } else {
@@ -967,6 +1039,13 @@ a{color:var(--accent)}
     setTimeout(function () {
       try { $('result').scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { $('result').scrollIntoView(); }
     }, 50);
+  }
+
+  function setJaOpen(on, noSave) {
+    show($('jaInner'), on);
+    $('jaToggle').setAttribute('aria-expanded', on ? 'true' : 'false');
+    $('jaArrow').textContent = on ? '▾' : '▸';
+    if (!noSave) { lsSet('jaOpen', on ? '1' : '0'); }
   }
 
   function renderResult(r, fromPhoto) {
@@ -1145,6 +1224,7 @@ a{color:var(--accent)}
     clearError();
     if (!text) { showError('No hi ha text.', ' Escriu, enganxa o escaneja el que vols traduir.'); return; }
     if (text.length > MAX_CHARS) { showError('Text massa llarg.', ' Retalla\'l a menys de ' + MAX_CHARS + ' caràcters.'); return; }
+    if (text.length > LONG_CHARS && !window.confirm('El text és llarg (' + text.length + ' caràcters). Amb textos llargs la resposta falla més sovint: és millor traduir-lo per parts.\n\nVols traduir-lo igualment?')) { return; }
     try { $('txt').blur(); } catch (e) { /* res */ }
     var dir = currentDir(text);
     show($('result'), false);
@@ -1239,7 +1319,7 @@ a{color:var(--accent)}
   function doCopy() {
     var t = $('copy').getAttribute('data-text') || $('resTrans').textContent;
     var done = function () {
-      var b = $('copy'); var old = '📄 Copia la traducció';
+      var b = $('copy'); var old = '📄 Copia';
       b.textContent = '✓ Copiat';
       setTimeout(function () { b.textContent = old; }, 1500);
     };
@@ -1426,6 +1506,7 @@ a{color:var(--accent)}
   $('voiceHelpBtn').addEventListener('click', function () { show($('voiceHelp'), $('voiceHelp').hasAttribute('hidden')); });
   $('star').addEventListener('click', function () { if (!currentEntry) { return; } setSaved(currentEntry, !isSaved(currentEntry)); updateStar(); });
   $('openHistory').addEventListener('click', openHistory);
+  $('jaToggle').addEventListener('click', function () { setJaOpen($('jaInner').hasAttribute('hidden')); if ($('jaInner').hasAttribute('hidden')) { stopSpeaking(); } });
   $('closeHistory').addEventListener('click', closeHistory);
   $('tabSaved').addEventListener('click', function () { setTab('saved'); });
   $('tabHist').addEventListener('click', function () { setTab('hist'); });
@@ -1480,7 +1561,7 @@ a{color:var(--accent)}
     navigator.serviceWorker.register('sw.js').catch(function (e) { /* sense SW */ });
   }
 
-  window.__trad = { renderEntry: renderEntry, toKatakana: toKatakana, kanaToRomaji: kanaToRomaji, detectDir: detectDir, parseResult: parseResult, modelOrder: modelOrder, isTextFlash: isTextFlash, version: VERSION, platform: isIOS ? 'ios' : (isAndroid ? 'android' : 'other') };
+  window.__trad = { lenientParse: lenientParse, renderEntry: renderEntry, toKatakana: toKatakana, kanaToRomaji: kanaToRomaji, detectDir: detectDir, parseResult: parseResult, modelOrder: modelOrder, isTextFlash: isTextFlash, version: VERSION, platform: isIOS ? 'ios' : (isAndroid ? 'android' : 'other') };
 })();
 </script>
 </body>

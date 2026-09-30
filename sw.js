@@ -1,5 +1,5 @@
 /* Traductor JA-CA · service worker */
-var CACHE = 'trad-v2.1';
+var CACHE = 'trad-v2.2';
 var SHELL = ['./', './index.html', './manifest.json', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', function (e) {
