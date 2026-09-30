@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Traductor JA↔CA</title>
+<meta name="theme-color" content="#f6f4f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#161514" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Traductor">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>
+[hidden]{display:none!important}
+:root{
+  --bg:#f6f4f1; --card:#ffffff; --text:#1d1b19; --muted:#6b655f; --line:#e3ded8;
+  --accent:#c8102e; --accent-text:#ffffff; --accent-soft:#fbe9ec;
+  --field:#fbfaf8; --ok:#1d7a46; --err:#b3261e; --err-soft:#fdecea;
+  --shadow:0 1px 2px rgba(0,0,0,.06),0 2px 8px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#161514; --card:#221f1d; --text:#f1ede8; --muted:#a39c94; --line:#3a3532;
+    --accent:#ff5a6e; --accent-text:#1a0507; --accent-soft:#3a1a1f;
+    --field:#1b1917; --ok:#5fd394; --err:#ff8a80; --err-soft:#3b1e1c;
+    --shadow:none;
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--text);
+  font:17px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Hiragino Sans","Noto Sans JP","Noto Sans CJK JP",sans-serif;
+  padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  min-height:100vh;
+}
+.wrap{max-width:560px;margin:0 auto;padding:12px 16px 32px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0 12px}
+header h1{font-size:22px;margin:0;letter-spacing:-.01em}
+header .sub{font-size:13px;color:var(--muted);margin-top:1px}
+.iconbtn{
+  width:44px;height:44px;border-radius:22px;border:1px solid var(--line);background:var(--card);
+  color:var(--text);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;
+}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow);margin-bottom:14px}
+.banner{background:var(--accent-soft);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:14px;font-size:15px}
+.banner button{margin-top:8px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.dirline{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.dirline .det{font-size:14px;color:var(--muted)}
+select{
+  font:inherit;font-size:15px;color:var(--text);background:var(--field);border:1px solid var(--line);
+  border-radius:10px;padding:8px 10px;min-height:40px;max-width:100%;
+}
+textarea,input[type=password],input[type=text]{
+  width:100%;font:inherit;font-size:18px;color:var(--text);background:var(--field);
+  border:1px solid var(--line);border-radius:12px;padding:12px;outline:none;
+}
+textarea{min-height:120px;resize:vertical;line-height:1.5}
+textarea:focus,input:focus,select:focus{border-color:var(--accent)}
+.btn{
+  font:inherit;font-size:16px;font-weight:600;border-radius:12px;border:1px solid var(--line);
+  background:var(--card);color:var(--text);padding:10px 14px;min-height:44px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;
+}
+.btn:disabled{opacity:.5}
+.btn.small{font-size:15px;font-weight:500;padding:8px 12px;min-height:40px}
+.btn.primary{background:var(--accent);color:var(--accent-text);border-color:var(--accent);width:100%;font-size:18px;min-height:52px;margin-top:12px}
+.btn.wide{width:100%}
+.btn.danger{color:var(--err)}
+.tools{display:flex;gap:8px;margin-top:10px}
+.tools .btn{flex:1}
+.linkbtn{background:none;border:0;color:var(--accent);font:inherit;font-size:15px;padding:6px 0;cursor:pointer;text-align:left}
+.help{font-size:15px;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px}
+.help h3{font-size:15px;margin:0 0 6px}
+.help ul,.help ol{margin:6px 0 0;padding-left:20px}
+.help li{margin:3px 0}
+.help p{margin:6px 0}
+.help .warn{margin-top:8px;color:var(--muted);font-size:14px}
+.photorow{display:flex;gap:8px;margin-top:10px}
+.photorow .btn{flex:1;position:relative;overflow:hidden}
+.vh{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.section-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:0 0 8px}
+.status{display:flex;align-items:center;gap:12px;font-size:16px}
+.spinner{width:22px;height:22px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:spin .8s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.thumb{width:56px;height:56px;border-radius:8px;object-fit:cover;border:1px solid var(--line);flex:none}
+.error{background:var(--err-soft);color:var(--err);border-radius:14px;padding:12px 14px;margin-bottom:14px;font-size:15px}
+.error b{display:block;margin-bottom:2px}
+.error .detail{color:var(--muted);font-size:13px;margin-top:6px;word-break:break-word}
+.res-dir{font-size:13px;color:var(--muted);margin-bottom:6px}
+.trans{font-size:22px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
+.trans.ja{font-size:28px;line-height:1.5}
+.orig{font-size:15px;color:var(--muted);white-space:pre-wrap;word-break:break-word;border-left:3px solid var(--line);padding-left:10px;margin-bottom:10px}
+.notes{margin:12px 0 0;padding:10px 12px 10px 30px;background:var(--field);border-radius:10px;font-size:15px}
+.notes li{margin:3px 0}
+.meta{font-size:12px;color:var(--muted);margin-top:10px}
+.field-label{font-weight:600;font-size:15px;margin:0 0 6px;display:block}
+.hint{font-size:14px;color:var(--muted);margin:6px 0 0}
+.keyrow{display:flex;gap:8px}
+.keyrow input{flex:1;font-size:16px}
+.ok{color:var(--ok)}
+.bad{color:var(--err)}
+.msg{font-size:15px;margin-top:10px}
+a{color:var(--accent)}
+.foot{font-size:12px;color:var(--muted);text-align:center;margin-top:18px}
+.mstats{list-style:none;margin:10px 0 0;padding:0;font-size:14px}
+.mstats li{display:flex;gap:8px;padding:7px 0;border-top:1px solid var(--line);align-items:baseline}
+.mstats .mn{font-weight:600;flex:none}
+.mstats .ms{color:var(--muted);flex:1;text-align:right}
+.photorow.big{margin-top:0}
+.photorow.big .btn{min-height:64px;font-size:17px;flex-direction:column;gap:2px}
+.jablock{margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.jatext{font-size:24px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.jatext.big{font-size:30px}
+.reading{font-size:17px;color:var(--muted);white-space:pre-wrap;word-break:break-word;margin-top:6px;line-height:1.5}
+.reading.romaji{font-style:italic}
+.rtools{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center}
+.stools{display:flex;gap:8px;margin-top:8px}
+.stools .chip{flex:1;min-height:44px;font-size:16px}
+.chip{font:inherit;font-size:15px;border:1px solid var(--line);background:var(--field);color:var(--muted);border-radius:999px;padding:6px 12px;min-height:38px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent-soft);color:var(--text);border-color:var(--accent)}
+.chip.speak{color:var(--text)}
+.chip.speak.on{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
+.testlist{list-style:none;margin:6px 0 0;padding-left:0;font-size:14px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ===================== PANTALLA PRINCIPAL ===================== -->
+<div id="main">
+  <header>
+    <div>
+      <h1>Traductor</h1>
+      <div class="sub">日本語 ↔ català</div>
+    </div>
+    <button class="iconbtn" id="openSettings" aria-label="Configuració">⚙︎</button>
+  </header>
+
+  <div class="banner" id="keyBanner" hidden>
+    Per traduir cal la clau gratuïta de Gemini.
+    <div><button class="btn small" id="bannerSettings">Configura la clau</button></div>
+  </div>
+
+  <!-- Entrada principal per foto (iPhone i altres) -->
+  <div class="card" id="photoMain" hidden>
+    <div class="photorow big">
+      <label class="btn">📷 Fes una foto<input class="vh" type="file" id="photoCam2" accept="image/*" capture="environment"></label>
+      <label class="btn">🖼 Tria de Fotos<input class="vh" type="file" id="photoLib2" accept="image/*"></label>
+    </div>
+    <p class="hint">Rètols, menús, bitllets, etiquetes… Necessita connexió. No hi enviïs fotos amb dades personals: en la versió gratuïta, Google les pot fer servir per millorar els seus serveis.</p>
+  </div>
+
+  <div class="card">
+    <div class="dirline">
+      <select id="dir" aria-label="Direcció">
+        <option value="auto">Automàtic</option>
+        <option value="ja-ca">Japonès → Català</option>
+        <option value="ca-ja">Català → Japonès</option>
+      </select>
+      <span class="det" id="detected"></span>
+    </div>
+    <textarea id="txt" placeholder="Escriu, dicta o enganxa el text…" aria-label="Text a traduir"></textarea>
+    <div class="tools">
+      <button class="btn small" id="paste">📋 Enganxa i tradueix</button>
+      <button class="btn small" id="clear">✕ Esborra</button>
+    </div>
+    <button class="btn primary" id="go">Tradueix</button>
+    <div id="androidScan" hidden>
+      <button class="linkbtn" id="scanHelpBtn">🔍 Com escanejar text amb la càmera del teclat</button>
+      <div class="help" id="scanHelp" hidden>
+        <ul>
+          <li><b>Gboard:</b> toca la icona de quadrets de la part de dalt del teclat i tria <b>«Escaneja text»</b>.</li>
+          <li><b>Teclat Samsung:</b> busca l'opció <b>«Extreu text»</b> a la barra d'eines del teclat.</li>
+        </ul>
+        <p>Apunta al text japonès, insereix-lo i toca <b>Tradueix</b>.</p>
+        <p class="warn">Si l'escaneig no llegeix bé el text, fes servir «Foto a Gemini».</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Casos especials (Android) -->
+  <div class="card" id="photoSpecial" hidden>
+    <p class="section-title">Casos especials</p>
+    <div class="photorow">
+      <label class="btn small">📷 Càmera<input class="vh" type="file" id="photoCam" accept="image/*" capture="environment"></label>
+      <label class="btn small">🖼 Galeria<input class="vh" type="file" id="photoLib" accept="image/*"></label>
+    </div>
+    <button class="linkbtn" id="photoHelpBtn">ℹ️ Quan fer servir «Foto a Gemini»?</button>
+    <div class="help" id="photoHelp" hidden>
+      <p>Normalment, és millor escanejar el text amb el teclat: és més ràpid i funciona sense connexió. Fes servir la foto quan l'escaneig:</p>
+      <ul>
+        <li>no detecti el text o el llegeixi malament,</li>
+        <li>es trobi amb <b>text vertical</b> (rètols, cartells, llibres),</li>
+        <li>tingui davant <b>lletra manuscrita</b> o molt decorada (menús, pissarres),</li>
+        <li>barregi l'ordre en <b>menús o cartells amb columnes</b>,</li>
+        <li>hagi de llegir fotos amb <b>poca llum</b> o fetes de lluny.</li>
+      </ul>
+      <p class="warn">⚠️ Necessita connexió. No hi enviïs fotos amb dades personals: en la versió gratuïta, Google pot fer servir les imatges per millorar els seus serveis.</p>
+    </div>
+  </div>
+
+  <div class="card" id="loading" hidden>
+    <div class="status">
+      <div class="spinner"></div>
+      <img class="thumb" id="thumb" alt="" hidden>
+      <span id="loadingText">Traduint…</span>
+    </div>
+  </div>
+
+  <div class="error" id="error" hidden></div>
+
+  <div class="card" id="result" hidden>
+    <div class="res-dir" id="resDir"></div>
+    <div class="jablock" id="jaBlock">
+      <div class="jatext" id="jaText" lang="ja"></div>
+      <div class="reading" id="readH" lang="ja" hidden></div>
+      <div class="reading" id="readK" lang="ja" hidden></div>
+      <div class="reading romaji" id="readR" hidden></div>
+      <div class="rtools">
+        <button class="chip" id="tH" aria-pressed="true">あ</button>
+        <button class="chip" id="tK" aria-pressed="false">ア</button>
+        <button class="chip" id="tR" aria-pressed="true">rōmaji</button>
+      </div>
+      <div class="stools">
+        <button class="chip speak" id="speakN" aria-label="Escolta">🔊 Escolta</button>
+        <button class="chip speak" id="speakS" aria-label="Escolta lent">🐢 Lent</button>
+      </div>
+    </div>
+    <div class="trans" id="resTrans" lang="ca"></div>
+    <ul class="notes" id="resNotes" hidden></ul>
+    <div class="row between" style="margin-top:12px">
+      <button class="btn small" id="copy">📄 Copia la traducció</button>
+      <span class="meta" id="resMeta"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== CONFIGURACIÓ ===================== -->
+<div id="settings" hidden>
+  <header>
+    <div>
+      <h1>Configuració</h1>
+      <div class="sub">Motor: Gemini (gratuït)</div>
+    </div>
+    <button class="iconbtn" id="closeSettings" aria-label="Tanca">✕</button>
+  </header>
+
+  <div class="card">
+    <label class="field-label" for="key">Clau de Gemini</label>
+    <div class="keyrow">
+      <input type="password" id="key" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="AIza…">
+      <button class="btn small" id="toggleKey" aria-label="Mostra o amaga la clau">👁</button>
+    </div>
+    <button class="btn primary" id="saveKey">Desa i prova la clau</button>
+    <div class="msg" id="keyMsg" hidden></div>
+    <p class="hint">La clau només es desa en aquest mòbil. No va mai al codi ni a GitHub. La pots consultar a <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>.</p>
+  </div>
+
+  <div class="card">
+    <label class="field-label" for="model">Model</label>
+    <select id="model" style="width:100%">
+      <option value="auto">Automàtic (recomanat)</option>
+    </select>
+    <p class="hint">En automàtic, l'app prova sempre primer el model més bo. Si un model falla, se'l salta una estona (1 hora, o 24 hores si no és gratuït) i després el torna a provar.</p>
+    <p class="hint">Model actiu: <b id="activeModel">cap encara</b></p>
+    <ul class="mstats" id="modelStats" hidden></ul>
+  </div>
+
+  <div class="card">
+    <span class="field-label">Veu japonesa</span>
+    <p class="hint" id="voiceInfo">Buscant veus…</p>
+    <button class="btn small" id="voiceTest">🔊 Prova la veu</button>
+    <div class="help">
+      <p>Per a una veu més natural, a l'iPhone ves a <b>Configuració › Accessibilitat › Contingut parlat › Veus › Japonès</b> i descarrega una veu <b>«millorada»</b> o <b>«prèmium»</b>. Després tanca i torna a obrir l'app.</p>
+      <p class="warn">La veu funciona sense connexió. Si no sona, revisa el volum i el mode silenci.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <button class="btn wide danger" id="deleteKey">Esborra la clau d'aquest mòbil</button>
+  </div>
+
+  <p class="foot">Traductor JA↔CA · v2.0</p>
+</div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var VERSION = '2.0';
+  var API = 'https://generativelanguage.googleapis.com/v1beta/';
+  var CHAIN = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
+  var LITE = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-2.5-flash-lite'];
+  var JA_RE = /[぀-ヿ㐀-鿿ｦ-ﾟ]/;
+  var TIMEOUT_MS = 45000;
+  var TEST_TIMEOUT_MS = 15000;
+  var HOUR = 3600000;
+  /* quant de temps se salta un model que ha fallat, segons el motiu */
+  var COOLDOWN = { nofree: 24 * HOUR, notfound: 24 * HOUR, forbidden: 24 * HOUR, quota: HOUR, timeout: HOUR, overload: HOUR, badreq: HOUR, empty: HOUR, model: HOUR };
+  var REASON_TEXT = {
+    ok: 'funciona',
+    nofree: 'no inclòs al nivell gratuït',
+    quota: 'límit assolit (per minut o per dia)',
+    notfound: 'no disponible',
+    forbidden: 'sense permís',
+    timeout: 'no respon (temps esgotat)',
+    overload: 'servei saturat',
+    badreq: 'petició no acceptada',
+    empty: 'resposta buida',
+    model: 'error',
+    network: 'sense connexió'
+  };
+  var MAX_SIDE = 1600;
+  var MAX_CHARS = 4000;
+
+  function $(id) { return document.getElementById(id); }
+  function show(el, on) { if (on) { el.removeAttribute('hidden'); } else { el.setAttribute('hidden', ''); } }
+
+  /* ---------- emmagatzematge (prefix trad_) ---------- */
+  function lsGet(k, d) { try { var v = localStorage.getItem('trad_' + k); return v === null ? d : v; } catch (e) { return d; } }
+  function lsSet(k, v) { try { localStorage.setItem('trad_' + k, v); } catch (e) { /* sense emmagatzematge */ } }
+  function lsDel(k) { try { localStorage.removeItem('trad_' + k); } catch (e) { /* res */ } }
+  function jsonGet(k, d) { var s = lsGet(k, null); if (!s) { return d; } try { return JSON.parse(s); } catch (e) { return d; } }
+  function jsonSet(k, v) { lsSet(k, JSON.stringify(v)); }
+
+  function getKey() { return (lsGet('key', '') || '').trim(); }
+
+  /* ---------- plataforma ---------- */
+  var ua = navigator.userAgent || '';
+  var isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var isAndroid = /Android/.test(ua);
+
+  /* ---------- direcció ---------- */
+  function detectDir(text) { return JA_RE.test(text) ? 'ja-ca' : 'ca-ja'; }
+  function dirLabel(d) { return d === 'ja-ca' ? 'Japonès → Català' : 'Català → Japonès'; }
+  function currentDir(text) { var v = $('dir').value; return v === 'auto' ? detectDir(text) : v; }
+  function updateDetected() {
+    var t = $('txt').value.trim();
+    if ($('dir').value !== 'auto' || !t) { $('detected').textContent = ''; return; }
+    $('detected').textContent = 'Detectat: ' + (detectDir(t) === 'ja-ca' ? 'japonès' : 'català');
+  }
+
+  /* ---------- prompt ---------- */
+  var SYSTEM =
+    'Ets un traductor expert japonès↔català que ajuda un turista català durant un viatge al Japó. ' +
+    'Respon NOMÉS amb un objecte JSON vàlid, sense cap altre text, amb aquest format exacte: ' +
+    '{"direccio":"ja-ca" o "ca-ja","original":"text d\'origen","traduccio":"text traduït","lectura":"lectura en hiragana","romaji":"lectura en romaji","notes":["nota 1","nota 2"]}. ' +
+    'Regles: ' +
+    '1) "traduccio" ha de ser natural i fidel. En japonès→català, escriu en català correcte i natural. ' +
+    'En català→japonès, fes servir un japonès educat i natural (forma -masu/desu), adequat per ensenyar-lo a un japonès. ' +
+    '2) "notes": de 0 a 2 notes molt breus en català, només si aporten alguna cosa útil (context cultural, ambigüitat, ' +
+    'què és un plat o un producte, registre). Si no cal cap nota, retorna una llista buida. ' +
+    '3) "original": el text d\'origen tal com l\'has entès (corregit si hi ha errors evidents d\'escaneig). ' +
+    '4) Si el text d\'origen no és català però tampoc japonès (per exemple castellà o anglès), tradueix-lo igualment al japonès. ' +
+    '5) "lectura": la lectura completa en HIRAGANA del text japonès (l\'"original" si és japonès→català, la "traduccio" si és català→japonès). ' +
+    'Converteix tots els kanji i el katakana a hiragana, llegint cada kanji segons el context. Els nombres escriu-los com es llegeixen (800円 → はっぴゃくえん). ' +
+    'Separa les paraules amb un espai, conserva la puntuació i els salts de línia del text japonès. ' +
+    '6) "romaji": la mateixa lectura en romaji Hepburn, amb la mateixa separació i els mateixos salts de línia; ' +
+    'les partícules は, へ, を s\'escriuen wa, e, o, i les vocals llargues amb macró (ā, ī, ū, ē, ō).';
+
+  function buildUserText(dir, hasImage, text) {
+    if (hasImage) {
+      return 'Llegeix tot el text japonès que apareix a la imatge, en l\'ordre de lectura natural ' +
+        '(tingues en compte el text vertical i les columnes). Posa\'l a "original" i tradueix-lo al català ("direccio":"ja-ca"). ' +
+        'Si hi ha diversos elements separats (per exemple, plats d\'un menú), separa\'ls amb salts de línia tant a "original" com a "traduccio". ' +
+        'Si la imatge no conté text japonès llegible, retorna "original":"" i explica-ho breument a "traduccio".';
+    }
+    return 'Direcció: ' + (dir === 'ja-ca' ? 'japonès → català' : 'català → japonès') + '.\nText:\n' + text;
+  }
+
+  /* ---------- crides a Gemini ---------- */
+  function fetchWithTimeout(url, opts, ms) {
+    var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    if (ctrl) { opts.signal = ctrl.signal; }
+    var timer = setTimeout(function () { if (ctrl) { ctrl.abort(); } }, ms);
+    return fetch(url, opts).then(function (res) {
+      clearTimeout(timer);
+      return res.text().then(function (txt) {
+        var data = null;
+        try { data = JSON.parse(txt); } catch (e) { data = null; }
+        return { status: res.status, data: data, raw: txt };
+      });
+    }, function (err) {
+      clearTimeout(timer);
+      var e = new Error(err && err.name === 'AbortError' ? 'timeout' : 'network');
+      e.kind = err && err.name === 'AbortError' ? 'timeout' : 'network';
+      throw e;
+    });
+  }
+
+  function thinkingFor(model) {
+    if (/^gemini-2\.5/.test(model)) { return { thinkingBudget: 0 }; }
+    return { thinkingLevel: 'minimal' };
+  }
+
+  function buildBody(model, parts, simple) {
+    var body = {
+      systemInstruction: { parts: [{ text: SYSTEM }] },
+      contents: [{ role: 'user', parts: parts }],
+      generationConfig: { temperature: 0.2, maxOutputTokens: 8192 }
+    };
+    if (!simple) {
+      body.generationConfig.responseMimeType = 'application/json';
+      body.generationConfig.thinkingConfig = thinkingFor(model);
+    }
+    return body;
+  }
+
+  function isKeyError(r) {
+    var s = r.raw || '';
+    if (r.status === 401) { return true; }
+    if (/API_KEY_INVALID|API key not valid|API key expired|API_KEY_EXPIRED/i.test(s)) { return true; }
+    if (r.status === 403 && /API key|unregistered callers|API_KEY/i.test(s) && !/model/i.test(s)) { return true; }
+    return false;
+  }
+
+  function errMessage(r) {
+    if (r.data && r.data.error && r.data.error.message) { return r.data.error.message; }
+    return 'HTTP ' + r.status;
+  }
+
+  function extractText(data) {
+    if (!data || !data.candidates || !data.candidates.length) { return null; }
+    var c = data.candidates[0];
+    if (!c.content || !c.content.parts) { return null; }
+    var out = '';
+    for (var i = 0; i < c.content.parts.length; i++) {
+      var p = c.content.parts[i];
+      if (p.thought) { continue; }
+      if (typeof p.text === 'string') { out += p.text; }
+    }
+    return out;
+  }
+
+  function parseResult(text, dir) {
+    var t = (text || '').trim();
+    t = t.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+    var a = t.indexOf('{'), b = t.lastIndexOf('}');
+    if (a !== -1 && b > a) {
+      try {
+        var o = JSON.parse(t.slice(a, b + 1));
+        var notes = [];
+        if (o.notes && o.notes.length) {
+          for (var i = 0; i < o.notes.length; i++) { if (o.notes[i]) { notes.push(String(o.notes[i])); } }
+        }
+        return {
+          dir: o.direccio === 'ja-ca' || o.direccio === 'ca-ja' ? o.direccio : dir,
+          original: o.original ? String(o.original) : '',
+          translation: o.traduccio ? String(o.traduccio) : '',
+          reading: o.lectura ? String(o.lectura) : '',
+          romaji: o.romaji ? String(o.romaji) : '',
+          notes: notes
+        };
+      } catch (e) { /* cau al format lliure */ }
+    }
+    return { dir: dir, original: '', translation: t, reading: '', romaji: '', notes: [] };
+  }
+
+  /* ---------- estat dels models ---------- */
+  function getStats() { return jsonGet('mstat', {}); }
+  function setStat(model, reason, detail) {
+    var s = getStats();
+    s[model] = { r: reason, t: Date.now(), d: detail ? String(detail).slice(0, 200) : '' };
+    jsonSet('mstat', s);
+  }
+  function isCoolingDown(model, stats) {
+    var st = stats[model];
+    if (!st || st.r === 'ok') { return false; }
+    var cd = COOLDOWN[st.r] || HOUR;
+    return Date.now() - st.t < cd;
+  }
+  function classify(r) {
+    var s = r.raw || '';
+    if (r.status === 429) { return /limit:\s*0\b|free_tier[^,]*,\s*limit:\s*0/i.test(s) ? 'nofree' : 'quota'; }
+    if (r.status === 404) { return 'notfound'; }
+    if (r.status === 403) { return 'forbidden'; }
+    if (r.status >= 500) { return 'overload'; }
+    if (r.status === 400) { return 'badreq'; }
+    return 'model';
+  }
+  function ago(t) {
+    var m = Math.round((Date.now() - t) / 60000);
+    if (m < 1) { return 'ara mateix'; }
+    if (m < 60) { return 'fa ' + m + ' min'; }
+    var h = Math.round(m / 60);
+    if (h < 24) { return 'fa ' + h + ' h'; }
+    return 'fa ' + Math.round(h / 24) + ' dies';
+  }
+
+  /* Prova un model. Retorna {ok, result} o {ok:false, reason, fatal, detail} */
+  async function tryModel(model, key, parts, dir, timeoutMs) {
+    var simpleMap = jsonGet('simple', {});
+    var simple = !!simpleMap[model];
+    for (var attempt = 0; attempt < 2; attempt++) {
+      var r;
+      try {
+        r = await fetchWithTimeout(API + 'models/' + encodeURIComponent(model) + ':generateContent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+          body: JSON.stringify(buildBody(model, parts, simple))
+        }, timeoutMs || TIMEOUT_MS);
+      } catch (e) {
+        if (e.kind === 'timeout') { return { ok: false, reason: 'timeout', detail: 'Temps d\'espera esgotat' }; }
+        return { ok: false, reason: 'network', fatal: true };
+      }
+      if (r.status === 200) {
+        var fb = r.data && r.data.promptFeedback && r.data.promptFeedback.blockReason;
+        var txt = extractText(r.data);
+        if (fb || txt === null || !txt.trim()) {
+          return { ok: false, reason: 'empty', detail: fb ? ('Bloquejat: ' + fb) : 'Resposta buida' };
+        }
+        return { ok: true, result: parseResult(txt, dir) };
+      }
+      if (isKeyError(r)) { return { ok: false, reason: 'key', fatal: true, detail: errMessage(r) }; }
+      if (r.status === 400 && !simple) {
+        simple = true;
+        simpleMap[model] = 1;
+        jsonSet('simple', simpleMap);
+        continue;
+      }
+      return { ok: false, reason: classify(r), detail: errMessage(r) };
+    }
+    return { ok: false, reason: 'badreq', detail: 'Error de format' };
+  }
+
+  /* Ordre de prova: sempre del millor al pitjor, saltant els que han fallat fa poc.
+     Així, passat el temps d'espera, l'app torna a provar els models millors. */
+  function preferredList() {
+    var avail = jsonGet('models', []);
+    var base = CHAIN.concat(LITE);
+    if (avail.length) {
+      base = base.filter(function (m) { return avail.indexOf(m) !== -1; });
+      if (!base.length) { base = avail.slice(0, 3); }
+    }
+    return base;
+  }
+  function modelOrder(fresh) {
+    var forced = lsGet('model', 'auto');
+    if (forced !== 'auto') { return [forced]; }
+    var base = preferredList();
+    if (fresh) { return base; }
+    var stats = getStats();
+    var out = base.filter(function (m) { return !isCoolingDown(m, stats); });
+    return out.length ? out : base;
+  }
+
+  /* opts: {fresh: ignora els temps d'espera, timeout: ms} */
+  async function translateParts(parts, dir, onModel, opts) {
+    opts = opts || {};
+    var key = getKey();
+    if (!key) { return { ok: false, reason: 'nokey' }; }
+    if (navigator.onLine === false) { return { ok: false, reason: 'offline' }; }
+    var order = modelOrder(opts.fresh);
+    var fails = [];
+    for (var i = 0; i < order.length; i++) {
+      if (onModel) { onModel(order[i], i, fails); }
+      var r = await tryModel(order[i], key, parts, dir, opts.timeout);
+      if (r.ok) {
+        lsSet('working', order[i]);
+        setStat(order[i], 'ok');
+        r.model = order[i];
+        r.fails = fails;
+        return r;
+      }
+      if (r.fatal) { return r; }
+      setStat(order[i], r.reason, r.detail);
+      fails.push({ model: order[i], reason: r.reason, detail: r.detail });
+    }
+    var isQ = function (f) { return f.reason === 'quota' || f.reason === 'nofree'; };
+    var allQuota = fails.length && fails.every(isQ);
+    var anyQuota = fails.some(function (f) { return f.reason === 'quota'; });
+    return { ok: false, reason: allQuota ? 'quota' : (anyQuota ? 'quota-mixed' : 'allfail'), fails: fails };
+  }
+  function failsText(fails) {
+    return fails.map(function (f) { return f.model + ': ' + (REASON_TEXT[f.reason] || f.reason); });
+  }
+
+  /* ---------- UI: estat ---------- */
+  var busy = false;
+  function setBusy(on, text, thumbUrl) {
+    busy = on;
+    show($('loading'), on);
+    $('loadingText').textContent = text || 'Traduint…';
+    if (thumbUrl) { $('thumb').src = thumbUrl; show($('thumb'), true); } else { show($('thumb'), false); }
+    $('go').disabled = on;
+    $('photoCam').disabled = on;
+    $('photoLib').disabled = on;
+    $('photoCam2').disabled = on;
+    $('photoLib2').disabled = on;
+    $('paste').disabled = on;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function showError(title, body, detail) {
+    var h = '<b>' + escapeHtml(title) + '</b>' + (body ? escapeHtml(body) : '');
+    if (detail) { h += '<div class="detail">' + escapeHtml(detail) + '</div>'; }
+    $('error').innerHTML = h;
+    show($('error'), true);
+  }
+  function clearError() { show($('error'), false); $('error').innerHTML = ''; }
+
+  function showFailure(r) {
+    if (r.reason === 'nokey') {
+      showError('Falta la clau de Gemini.', ' Obre la configuració (⚙︎) per afegir-la.');
+    } else if (r.reason === 'offline' || r.reason === 'network') {
+      showError('Sense connexió.', ' La traducció necessita internet. Revisa les dades mòbils o el wifi i torna-ho a provar.');
+    } else if (r.reason === 'key') {
+      showError('La clau no és vàlida.', ' Revisa-la a la configuració (⚙︎).', r.detail);
+    } else if (r.reason === 'quota') {
+      showError('Límit gratuït assolit.', ' Espera un minut i torna-ho a provar. Si continua, és el límit diari: demà es reinicia.');
+    } else {
+      var d = '';
+      if (r.fails) { d = failsText(r.fails).join(' · '); }
+      var extra = r.reason === 'quota-mixed' ? ' Alguns models han arribat al límit.' : '';
+      showError('No s\'ha pogut traduir.', extra + ' Torna-ho a provar d\'aquí a una estona.', d);
+    }
+  }
+
+  /* ---------- kana ---------- */
+  function toKatakana(s) {
+    var out = '';
+    for (var i = 0; i < s.length; i++) {
+      var c = s.charCodeAt(i);
+      if ((c >= 0x3041 && c <= 0x3096) || c === 0x309D || c === 0x309E) { out += String.fromCharCode(c + 0x60); } else { out += s.charAt(i); }
+    }
+    return out;
+  }
+  var R_DI = { 'きゃ':'kya','きゅ':'kyu','きょ':'kyo','しゃ':'sha','しゅ':'shu','しょ':'sho','ちゃ':'cha','ちゅ':'chu','ちょ':'cho',
+    'にゃ':'nya','にゅ':'nyu','にょ':'nyo','ひゃ':'hya','ひゅ':'hyu','ひょ':'hyo','みゃ':'mya','みゅ':'myu','みょ':'myo',
+    'りゃ':'rya','りゅ':'ryu','りょ':'ryo','ぎゃ':'gya','ぎゅ':'gyu','ぎょ':'gyo','じゃ':'ja','じゅ':'ju','じょ':'jo',
+    'びゃ':'bya','びゅ':'byu','びょ':'byo','ぴゃ':'pya','ぴゅ':'pyu','ぴょ':'pyo','ぢゃ':'ja','ぢゅ':'ju','ぢょ':'jo',
+    'てぃ':'ti','でぃ':'di','ふぁ':'fa','ふぃ':'fi','ふぇ':'fe','ふぉ':'fo','しぇ':'she','じぇ':'je','ちぇ':'che','うぃ':'wi','うぇ':'we','ゔぁ':'va' };
+  var R_MONO = 'あ:a い:i う:u え:e お:o か:ka き:ki く:ku け:ke こ:ko さ:sa し:shi す:su せ:se そ:so た:ta ち:chi つ:tsu て:te と:to ' +
+    'な:na に:ni ぬ:nu ね:ne の:no は:ha ひ:hi ふ:fu へ:he ほ:ho ま:ma み:mi む:mu め:me も:mo や:ya ゆ:yu よ:yo ' +
+    'ら:ra り:ri る:ru れ:re ろ:ro わ:wa ゐ:i ゑ:e を:o ん:n が:ga ぎ:gi ぐ:gu げ:ge ご:go ざ:za じ:ji ず:zu ぜ:ze ぞ:zo ' +
+    'だ:da ぢ:ji づ:zu で:de ど:do ば:ba び:bi ぶ:bu べ:be ぼ:bo ぱ:pa ぴ:pi ぷ:pu ぺ:pe ぽ:po ぁ:a ぃ:i ぅ:u ぇ:e ぉ:o ゃ:ya ゅ:yu ょ:yo ゔ:vu';
+  var R_MAP = {};
+  (function () {
+    var parts = R_MONO.split(' ');
+    for (var i = 0; i < parts.length; i++) { var kv = parts[i].split(':'); R_MAP[kv[0]] = kv[1]; }
+  })();
+  /* romaji de reserva (si Gemini no l'envia) */
+  function kanaToRomaji(src) {
+    var s = '';
+    for (var k = 0; k < src.length; k++) {
+      var c = src.charCodeAt(k);
+      s += (c >= 0x30A1 && c <= 0x30F6) ? String.fromCharCode(c - 0x60) : src.charAt(k);
+    }
+    var out = '', i = 0, geminate = false;
+    while (i < s.length) {
+      var two = s.substr(i, 2), one = s.charAt(i), r = null;
+      if (R_DI[two]) { r = R_DI[two]; i += 2; }
+      else if (one === 'っ') { geminate = true; i++; continue; }
+      else if (one === 'ー') { var m = out.match(/[aiueo]$/); out += m ? m[0] : ''; i++; continue; }
+      else if (R_MAP[one]) { r = R_MAP[one]; i++; }
+      else { out += one; i++; geminate = false; continue; }
+      if (geminate) { out += (r.indexOf('ch') === 0 ? 't' : r.charAt(0)); geminate = false; }
+      out += r;
+    }
+    return out;
+  }
+
+  /* ---------- preferències de lectura ---------- */
+  var showPref = { H: lsGet('showH', '1') === '1', K: lsGet('showK', '0') === '1', R: lsGet('showR', '1') === '1' };
+  function applyReadingPrefs() {
+    var hasH = !!$('readH').textContent;
+    show($('readH'), showPref.H && hasH);
+    show($('readK'), showPref.K && hasH);
+    show($('readR'), showPref.R && !!$('readR').textContent);
+    $('tH').setAttribute('aria-pressed', showPref.H ? 'true' : 'false');
+    $('tK').setAttribute('aria-pressed', showPref.K ? 'true' : 'false');
+    $('tR').setAttribute('aria-pressed', showPref.R ? 'true' : 'false');
+  }
+  function togglePref(k) {
+    showPref[k] = !showPref[k];
+    lsSet('show' + k, showPref[k] ? '1' : '0');
+    applyReadingPrefs();
+  }
+
+  /* ---------- veu (speechSynthesis) ---------- */
+  var jaVoice = null;
+  var speakingBtn = null;
+  var hasTTS = typeof window.speechSynthesis !== 'undefined' && typeof window.SpeechSynthesisUtterance !== 'undefined';
+  function voiceScore(v) {
+    var n = (v.name + ' ' + v.voiceURI).toLowerCase();
+    var sc = 0;
+    if (/premium|prèmium/.test(n)) { sc += 3; }
+    if (/enhanced|millorada|mejorada/.test(n)) { sc += 2; }
+    if (v.localService) { sc += 1; }
+    return sc;
+  }
+  function pickVoice() {
+    if (!hasTTS) { return null; }
+    var vs = window.speechSynthesis.getVoices() || [];
+    var best = null, bestSc = -1;
+    for (var i = 0; i < vs.length; i++) {
+      var lang = (vs[i].lang || '').toLowerCase().replace('_', '-');
+      if (lang.indexOf('ja') !== 0) { continue; }
+      var sc = voiceScore(vs[i]);
+      if (sc > bestSc) { best = vs[i]; bestSc = sc; }
+    }
+    jaVoice = best;
+    updateVoiceInfo();
+    return best;
+  }
+  function updateVoiceInfo() {
+    var el = $('voiceInfo');
+    if (!el) { return; }
+    if (!hasTTS) { el.textContent = 'Aquest navegador no pot llegir en veu alta.'; return; }
+    el.textContent = jaVoice ? ('Veu japonesa: ' + jaVoice.name) : 'Encara no s\'ha trobat cap veu japonesa (es farà servir la del sistema).';
+  }
+  function splitForSpeech(text) {
+    /* sense lookbehind (no funciona a iOS antics) */
+    var pieces = text.replace(/\r/g, '').replace(/([。！？!?\n])/g, '$1\u0001').split('\u0001');
+    var out = [], cur = '';
+    for (var i = 0; i < pieces.length; i++) {
+      var p = pieces[i].replace(/\n/g, ' ').trim();
+      if (!p) { continue; }
+      if ((cur + p).length > 180 && cur) { out.push(cur); cur = p; } else { cur += p; }
+    }
+    if (cur) { out.push(cur); }
+    return out;
+  }
+  function stopSpeaking() {
+    if (hasTTS) { window.speechSynthesis.cancel(); }
+    if (speakingBtn) { speakingBtn.classList.remove('on'); speakingBtn = null; }
+  }
+  function speak(text, rate, btn) {
+    if (!hasTTS) { showError('No es pot llegir en veu alta.', ' Aquest navegador no ho permet.'); return; }
+    var wasBtn = speakingBtn;
+    stopSpeaking();
+    if (wasBtn === btn) { return; }
+    if (!jaVoice) { pickVoice(); }
+    var chunks = splitForSpeech(text);
+    if (!chunks.length) { return; }
+    speakingBtn = btn;
+    if (btn) { btn.classList.add('on'); }
+    for (var i = 0; i < chunks.length; i++) {
+      var u = new SpeechSynthesisUtterance(chunks[i]);
+      u.lang = 'ja-JP';
+      if (jaVoice) { u.voice = jaVoice; }
+      u.rate = rate;
+      if (i === chunks.length - 1) {
+        u.onend = function () { if (speakingBtn === btn) { stopSpeaking(); } };
+        u.onerror = function (e) { if (speakingBtn === btn) { stopSpeaking(); } };
+      }
+      window.speechSynthesis.speak(u);
+    }
+  }
+  var lastJa = '';
+
+  function renderResult(r, fromPhoto) {
+    stopSpeaking();
+    var res = r.result;
+    $('resDir').textContent = (fromPhoto ? '📷 Foto · ' : '') + dirLabel(res.dir);
+    var ja = res.dir === 'ca-ja' ? res.translation : (res.original || $('txt').value.trim());
+    lastJa = ja;
+    var jaBlockOn = !!ja && JA_RE.test(ja);
+    $('jaText').textContent = ja;
+    $('jaText').className = 'jatext' + (res.dir === 'ca-ja' ? ' big' : '');
+    var reading = res.reading;
+    $('readH').textContent = reading;
+    $('readK').textContent = reading ? toKatakana(reading) : '';
+    $('readR').textContent = res.romaji || (reading ? kanaToRomaji(reading) : '');
+    applyReadingPrefs();
+    show($('tH'), !!reading); show($('tK'), !!reading); show($('tR'), !!$('readR').textContent);
+    show($('speakN'), hasTTS); show($('speakS'), hasTTS);
+    show($('jaBlock'), jaBlockOn);
+    /* en català→japonès, la traducció ja és al bloc japonès */
+    if (res.dir === 'ca-ja' && jaBlockOn) {
+      show($('resTrans'), false);
+    } else {
+      $('resTrans').textContent = res.translation || '(sense traducció)';
+      $('resTrans').setAttribute('lang', res.dir === 'ca-ja' ? 'ja' : 'ca');
+      $('resTrans').className = 'trans' + (res.dir === 'ca-ja' ? ' ja' : '');
+      show($('resTrans'), true);
+    }
+    $('copy').setAttribute('data-text', res.translation || '');
+    var ul = $('resNotes');
+    ul.innerHTML = '';
+    for (var i = 0; i < res.notes.length; i++) {
+      var li = document.createElement('li');
+      li.textContent = res.notes[i];
+      ul.appendChild(li);
+    }
+    show(ul, res.notes.length > 0);
+    $('resMeta').textContent = 'Gemini · ' + r.model.replace(/^gemini-/, '');
+    show($('result'), true);
+    $('activeModel').textContent = r.model;
+    setTimeout(function () {
+      try { $('result').scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { $('result').scrollIntoView(); }
+    }, 50);
+  }
+
+  /* ---------- accions ---------- */
+  async function doTranslateText() {
+    if (busy) { return; }
+    var text = $('txt').value.trim();
+    clearError();
+    if (!text) { showError('No hi ha text.', ' Escriu, enganxa o escaneja el que vols traduir.'); return; }
+    if (text.length > MAX_CHARS) { showError('Text massa llarg.', ' Retalla\'l a menys de ' + MAX_CHARS + ' caràcters.'); return; }
+    try { $('txt').blur(); } catch (e) { /* res */ }
+    var dir = currentDir(text);
+    show($('result'), false);
+    setBusy(true, 'Traduint…');
+    var r = await translateParts([{ text: buildUserText(dir, false, text) }], dir, function (m, i) {
+      $('loadingText').textContent = i === 0 ? 'Traduint…' : 'Traduint… (provant ' + m + ')';
+    });
+    setBusy(false);
+    if (r.ok) { renderResult(r, false); } else { showFailure(r); }
+  }
+
+  function resizeImage(file) {
+    return new Promise(function (resolve, reject) {
+      var url = (window.URL || window.webkitURL).createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        var w = img.naturalWidth, h = img.naturalHeight;
+        var scale = Math.min(1, MAX_SIDE / Math.max(w, h));
+        var cw = Math.round(w * scale), ch = Math.round(h * scale);
+        var c = document.createElement('canvas');
+        c.width = cw; c.height = ch;
+        var ctx = c.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, cw, ch);
+        ctx.drawImage(img, 0, 0, cw, ch);
+        var dataUrl = c.toDataURL('image/jpeg', 0.85);
+        (window.URL || window.webkitURL).revokeObjectURL(url);
+        resolve(dataUrl);
+      };
+      img.onerror = function () {
+        (window.URL || window.webkitURL).revokeObjectURL(url);
+        reject(new Error('img'));
+      };
+      img.src = url;
+    });
+  }
+
+  async function doTranslatePhoto(file) {
+    if (busy || !file) { return; }
+    clearError();
+    show($('result'), false);
+    var dataUrl;
+    setBusy(true, 'Preparant la foto…');
+    try {
+      dataUrl = await resizeImage(file);
+    } catch (e) {
+      setBusy(false);
+      showError('No s\'ha pogut obrir la foto.', ' Prova-ho amb una altra imatge.');
+      return;
+    }
+    setBusy(true, 'Llegint i traduint la foto…', dataUrl);
+    var b64 = dataUrl.split(',')[1];
+    var parts = [
+      { inline_data: { mime_type: 'image/jpeg', data: b64 } },
+      { text: buildUserText('ja-ca', true, '') }
+    ];
+    var r = await translateParts(parts, 'ja-ca', function (m, i) {
+      $('loadingText').textContent = i === 0 ? 'Llegint i traduint la foto…' : 'Llegint la foto… (provant ' + m + ')';
+    });
+    setBusy(false);
+    if (r.ok) {
+      if (r.result.original) {
+        $('txt').value = r.result.original;
+        $('dir').value = 'auto';
+        updateDetected();
+      }
+      renderResult(r, true);
+    } else {
+      showFailure(r);
+    }
+  }
+
+  function onPhotoInput(ev) {
+    var f = ev.target.files && ev.target.files[0];
+    ev.target.value = '';
+    if (f) { doTranslatePhoto(f); }
+  }
+
+  async function doPaste() {
+    clearError();
+    if (navigator.clipboard && navigator.clipboard.readText) {
+      try {
+        var t = await navigator.clipboard.readText();
+        if (t && t.trim()) { $('txt').value = t.trim(); $('dir').value = 'auto'; updateDetected(); doTranslateText(); return; }
+        showError('El porta-retalls és buit.', ' Copia primer el text que vols traduir.');
+        return;
+      } catch (e) { /* cau a l'ajuda */ }
+    }
+    showError('No s\'ha pogut enganxar.', ' Mantén premut el camp de text, tria «Enganxa» i després toca Tradueix.');
+  }
+
+  function doCopy() {
+    var t = $('copy').getAttribute('data-text') || $('resTrans').textContent;
+    var done = function () {
+      var b = $('copy'); var old = '📄 Copia la traducció';
+      b.textContent = '✓ Copiat';
+      setTimeout(function () { b.textContent = old; }, 1500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(t).then(done, function (e) { fallbackCopy(t); done(); });
+    } else { fallbackCopy(t); done(); }
+  }
+  function fallbackCopy(t) {
+    var ta = document.createElement('textarea');
+    ta.value = t; ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (e) { /* res */ }
+    document.body.removeChild(ta);
+  }
+
+  /* ---------- configuració ---------- */
+  function refreshBanner() { show($('keyBanner'), !getKey()); }
+
+  function fillModelSelect() {
+    var sel = $('model');
+    var saved = lsGet('model', 'auto');
+    var list = jsonGet('models', []);
+    var names = CHAIN.concat(LITE);
+    for (var i = 0; i < list.length; i++) { if (names.indexOf(list[i]) === -1) { names.push(list[i]); } }
+    if (saved !== 'auto' && names.indexOf(saved) === -1) { names.push(saved); }
+    sel.innerHTML = '<option value="auto">Automàtic (recomanat)</option>';
+    for (var j = 0; j < names.length; j++) {
+      if (list.length && list.indexOf(names[j]) === -1 && names[j] !== saved) { continue; }
+      var o = document.createElement('option');
+      o.value = names[j]; o.textContent = names[j];
+      sel.appendChild(o);
+    }
+    sel.value = saved;
+    if (sel.value !== saved) { sel.value = 'auto'; }
+    $('activeModel').textContent = lsGet('working', '') || 'cap encara';
+  }
+
+  function isTextFlash(m) {
+    var name = (m.name || '').replace(/^models\//, '');
+    var methods = m.supportedGenerationMethods || [];
+    if (methods.indexOf('generateContent') === -1) { return false; }
+    if (name.indexOf('flash') === -1) { return false; }
+    if (/tts|image|transcribe|robotics|computer|omni|live|audio|embedding|native/i.test(name)) { return false; }
+    return true;
+  }
+
+  function keyMsg(html, cls, persist) {
+    $('keyMsg').className = 'msg ' + (cls || '');
+    $('keyMsg').innerHTML = html;
+    show($('keyMsg'), true);
+    if (persist) {
+      jsonSet('lasttest', { h: html, c: cls || '', t: Date.now() });
+      lsDel('testing');
+    }
+  }
+
+  function showLastTest() {
+    var testing = parseInt(lsGet('testing', '0'), 10) || 0;
+    var last = jsonGet('lasttest', null);
+    if (testing && (!last || last.t < testing)) {
+      keyMsg('⚠️ La prova anterior es va interrompre (potser vas sortir de l\'app mentre provava). Torna-la a fer i espera sense sortir.', 'bad');
+      return;
+    }
+    if (last && last.h) {
+      keyMsg(last.h + '<div class="hint">Última prova: ' + ago(last.t) + '</div>', last.c);
+      return;
+    }
+    show($('keyMsg'), false);
+  }
+
+  function renderModelStats() {
+    var ul = $('modelStats');
+    var stats = getStats();
+    var list = preferredList();
+    ul.innerHTML = '';
+    var any = false;
+    for (var i = 0; i < list.length; i++) {
+      var st = stats[list[i]];
+      if (!st) { continue; }
+      any = true;
+      var li = document.createElement('li');
+      var icon = st.r === 'ok' ? '✅' : (isCoolingDown(list[i], stats) ? '⏸' : '↻');
+      li.innerHTML = '<span>' + icon + '</span><span class="mn">' + escapeHtml(list[i].replace(/^gemini-/, '')) + '</span>' +
+        '<span class="ms">' + escapeHtml(REASON_TEXT[st.r] || st.r) + ' · ' + ago(st.t) + '</span>';
+      ul.appendChild(li);
+    }
+    show(ul, any);
+  }
+
+  async function saveAndTest() {
+    var k = $('key').value.trim();
+    if (!k) { keyMsg('Enganxa primer la clau.', 'bad'); return; }
+    if (/\s/.test(k)) { keyMsg('La clau no pot tenir espais. Revisa que l\'hagis copiat sencera.', 'bad'); return; }
+    lsSet('key', k);
+    refreshBanner();
+    $('saveKey').disabled = true;
+    lsSet('testing', String(Date.now()));
+    keyMsg('Comprovant la clau… No surtis de l\'app fins que acabi.', '');
+    var r;
+    try {
+      r = await fetchWithTimeout(API + 'models?pageSize=1000', { method: 'GET', headers: { 'x-goog-api-key': k } }, 20000);
+    } catch (e) {
+      $('saveKey').disabled = false;
+      keyMsg('Clau desada, però no s\'ha pogut comprovar: no hi ha connexió.', 'bad', true);
+      return;
+    }
+    if (r.status !== 200) {
+      $('saveKey').disabled = false;
+      keyMsg(isKeyError(r) || r.status === 400 ? '❌ La clau no és vàlida. Revisa que l\'hagis copiat bé.' : '❌ Error en comprovar la clau (' + escapeHtml(errMessage(r)) + ').', 'bad', true);
+      return;
+    }
+    var models = (r.data && r.data.models) || [];
+    var names = models.filter(isTextFlash).map(function (m) { return m.name.replace(/^models\//, ''); });
+    jsonSet('models', names);
+    lsDel('simple');
+    lsDel('mstat');
+    fillModelSelect();
+    var progress = function (m, i, fails) {
+      var h = 'Clau correcta. Provant <b>' + escapeHtml(m) + '</b>… No surtis de l\'app.';
+      if (fails && fails.length) {
+        h += '<ul class="testlist">' + failsText(fails).map(function (x) { return '<li>✗ ' + escapeHtml(x) + '</li>'; }).join('') + '</ul>';
+      }
+      keyMsg(h, '');
+    };
+    var t = await translateParts([{ text: buildUserText('ja-ca', false, 'こんにちは') }], 'ja-ca', progress, { fresh: true, timeout: TEST_TIMEOUT_MS });
+    $('saveKey').disabled = false;
+    renderModelStats();
+    var failList = t.fails && t.fails.length ?
+      '<ul class="testlist">' + failsText(t.fails).map(function (x) { return '<li>✗ ' + escapeHtml(x) + '</li>'; }).join('') + '</ul>' : '';
+    if (t.ok) {
+      $('activeModel').textContent = t.model;
+      keyMsg('✅ Tot a punt. Model actiu: <b>' + escapeHtml(t.model) + '</b><br>Prova: こんにちは → ' + escapeHtml(t.result.translation) + failList, 'ok', true);
+    } else if (t.reason === 'key') {
+      keyMsg('❌ La clau no és vàlida. Revisa que l\'hagis copiat bé.', 'bad', true);
+    } else if (t.reason === 'offline' || t.reason === 'network') {
+      keyMsg('Clau desada, però s\'ha perdut la connexió durant la prova.', 'bad', true);
+    } else if (t.reason === 'quota') {
+      keyMsg('La clau és correcta, però ara mateix tots els models han arribat al límit. Torna-ho a provar d\'aquí a un minut.' + failList, 'bad', true);
+    } else {
+      keyMsg('La clau és correcta, però cap model ha respost.' + failList, 'bad', true);
+    }
+  }
+
+  function openSettings() {
+    $('key').value = getKey();
+    $('key').type = 'password';
+    fillModelSelect();
+    renderModelStats();
+    showLastTest();
+    show($('main'), false);
+    show($('settings'), true);
+    window.scrollTo(0, 0);
+  }
+  function closeSettings() {
+    show($('settings'), false);
+    show($('main'), true);
+    refreshBanner();
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- esdeveniments ---------- */
+  $('go').addEventListener('click', doTranslateText);
+  $('txt').addEventListener('input', updateDetected);
+  $('dir').addEventListener('change', updateDetected);
+  $('clear').addEventListener('click', function () {
+    $('txt').value = ''; updateDetected(); clearError(); show($('result'), false); $('txt').focus();
+  });
+  $('paste').addEventListener('click', doPaste);
+  $('copy').addEventListener('click', doCopy);
+  $('photoCam').addEventListener('change', onPhotoInput);
+  $('photoLib').addEventListener('change', onPhotoInput);
+  $('photoCam2').addEventListener('change', onPhotoInput);
+  $('photoLib2').addEventListener('change', onPhotoInput);
+  $('tH').addEventListener('click', function () { togglePref('H'); });
+  $('tK').addEventListener('click', function () { togglePref('K'); });
+  $('tR').addEventListener('click', function () { togglePref('R'); });
+  $('speakN').addEventListener('click', function () { speak(lastJa, 0.95, $('speakN')); });
+  $('speakS').addEventListener('click', function () { speak(lastJa, 0.6, $('speakS')); });
+  $('voiceTest').addEventListener('click', function () { speak('こんにちは。駅はどこですか？', 0.95, $('voiceTest')); });
+  $('scanHelpBtn').addEventListener('click', function () { show($('scanHelp'), $('scanHelp').hasAttribute('hidden')); });
+  $('photoHelpBtn').addEventListener('click', function () { show($('photoHelp'), $('photoHelp').hasAttribute('hidden')); });
+  $('openSettings').addEventListener('click', openSettings);
+  $('bannerSettings').addEventListener('click', openSettings);
+  $('closeSettings').addEventListener('click', closeSettings);
+  $('toggleKey').addEventListener('click', function () { $('key').type = $('key').type === 'password' ? 'text' : 'password'; });
+  $('saveKey').addEventListener('click', saveAndTest);
+  $('model').addEventListener('change', function () { lsSet('model', $('model').value); });
+  $('deleteKey').addEventListener('click', function () {
+    if (!window.confirm('Segur que vols esborrar la clau d\'aquest mòbil?')) { return; }
+    lsDel('key'); lsDel('working'); lsDel('models'); lsDel('simple'); lsDel('mstat'); lsDel('lasttest'); lsDel('testing');
+    $('key').value = '';
+    fillModelSelect();
+    renderModelStats();
+    keyMsg('Clau esborrada.', '');
+    refreshBanner();
+  });
+
+  /* entrada segons plataforma: Android → escaneig del teclat + foto per a casos especials;
+     iPhone i altres → la foto és l'entrada principal */
+  show($('androidScan'), isAndroid);
+  show($('photoSpecial'), isAndroid);
+  show($('photoMain'), !isAndroid);
+  $('txt').setAttribute('placeholder', isAndroid ? 'Escriu, dicta, enganxa o escaneja el text…' : 'Escriu, dicta o enganxa el text…');
+
+  /* veus: a iOS es carreguen de manera asíncrona */
+  if (hasTTS) {
+    pickVoice();
+    if (typeof window.speechSynthesis.addEventListener === 'function') {
+      window.speechSynthesis.addEventListener('voiceschanged', pickVoice);
+    } else { window.speechSynthesis.onvoiceschanged = pickVoice; }
+  } else { updateVoiceInfo(); }
+
+  refreshBanner();
+  updateDetected();
+
+  /* ---------- service worker ---------- */
+  var inFrame = false;
+  try { inFrame = window.self !== window.top; } catch (e) { inFrame = true; }
+  if ('serviceWorker' in navigator && window.isSecureContext && !inFrame && location.hostname.indexOf('claude') === -1 && location.protocol === 'https:') {
+    navigator.serviceWorker.register('sw.js').catch(function (e) { /* sense SW */ });
+  }
+
+  window.__trad = { toKatakana: toKatakana, kanaToRomaji: kanaToRomaji, detectDir: detectDir, parseResult: parseResult, modelOrder: modelOrder, isTextFlash: isTextFlash, version: VERSION, platform: isIOS ? 'ios' : (isAndroid ? 'android' : 'other') };
+})();
+</script>
+</body>
+</html>
